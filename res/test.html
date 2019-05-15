@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Speedtest</title>
+</head>
+<body>
+<div>
+    <button id="start_btn">Test</button>
+    <button id="stop_btn">Stop</button>
+</div>
+<pre>
+    <span>Download:</span> <span id="dbps">X</span> <span>B/s</span>
+    <span>Upload  :</span> <span id="ubps">X</span> <span>B/s</span>
+</pre>
+<script>
+  var ding = false;
+  var uing = false;
+
+  var dc = 0;
+  var dt = 0;
+
+  var span_dbps = document.getElementById('dbps');
+
+  function download() {
+    var start_time = new Date().getTime();
+
+    $.get('/d', function(data, status, xhr) {
+        var request_time = new Date().getTime() - start_time;
+
+        dc = dc + 1;
+        dt = dt + request_time;
+        span_dbps.innerText = ((10240 * dc) / dt).toFixed(2);
+      }
+    );
+  }
+
+  function upload() {
+
+  }
+
+  function TestStart() {
+    console.log('on test clicked');
+
+    ding = true;
+
+    setInterval(function () {
+      if (ding) { download(); }
+      if (uing) { upload(); }
+      if (dc >= 5000) {     // 5sn mark
+        ding = false;
+        uing = true;
+      }
+      if (dc >= 10000) {    // 10sn mark
+        ding = false;
+        uing = false;
+      }
+    }, 100); // 0.1 sn intervals
+  }
+
+  function TestStop() {
+    ding = false;
+    uing = false;
+  }
+
+  window.onload = function () {
+    console.log('onload');
+
+    document.getElementById('start_btn').onclick = TestStart;
+    document.getElementById('stop_btn').onclick = TestStop;
+  }
+</script>
+</body>
+</html>
