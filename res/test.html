@@ -31,13 +31,25 @@
     </div>
 </div>
 <script>
+  /**
+   * resources:
+   * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+   * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
+   * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+   *
+   * */
   var url = 'http://speed.erancihan.xyz';
 
   var uc = 0;
   var ui = 0;
   var ut = 0;
 
-  var bytes = 20E+6; // 20MB
+  var bytes = 20E6; // 20MB
+
+  var bdata = new Uint8Array(1E6);  // 1MB
+  for (let i = 0; i < (1E3); i++) { // randomize bytes
+    crypto.getRandomValues(bdata.subarray(i * 1E3, (i + 1) * 1E3));
+  }
 
   function download() {
     var dest = url + '/d?b=' + bytes;
@@ -49,7 +61,7 @@
 
     var oReq = new XMLHttpRequest();
     oReq.open('GET', dest);
-    oReq.addEventListener("progress", dup); // download update progress
+    oReq.addEventListener('progress', dup); // download update progress
 
     function dup(oe) {                      // download update progress
       var dt = new Date().getTime() - dsa;
@@ -64,37 +76,40 @@
   }
 
   function upload() {
-    if (ui > 5) {
-      return;
+    var dest = url + '/u';
+    var usa = new Date().getTime(); // upload start @timestamp ms
+
+    var span_ubps = document.getElementById('ubps');
+    var span_ur = document.getElementById('ur');   // upload resources
+    var span_dt = document.getElementById('ut');   // upload time elapsed
+
+    var oReq = new XMLHttpRequest();
+    oReq.open('POST', dest);
+    oReq.setRequestHeader('Content-Type', 'application/octet-stream');
+    oReq.addEventListener('progress', uup); // upload update progress
+
+    function uup(oe) {
+      console.log('upload');
+      console.log(oe.loaded, oe.total, oe.lengthComputable);
     }
-    ui = ui + 1;
 
-    var start_time = new Date().getTime();
-    var bdata = new Uint8Array(10240); // generate random data
-    crypto.getRandomValues(bdata);
-
-    $.post(url + '/u', bdata, function (data, status, xhr) {
-      var request_time = new Date().getTime() - start_time;
-
-      uc = uc + 1;
-      ut = ut + request_time;
-    }, "blob");
+    oReq.send(bdata);
   }
 
   function humanFileSize(bytes) {
     var thresh = 1024;
-    if(Math.abs(bytes) < thresh) {
+    if (Math.abs(bytes) < thresh) {
       return bytes + ' B';
     }
 
-    var units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
+    var units = ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     var u = -1;
     do {
       bytes /= thresh;
       ++u;
-    } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+    } while (Math.abs(bytes) >= thresh && u < units.length - 1);
 
-    return bytes.toFixed(2)+' '+units[u];
+    return bytes.toFixed(2) + ' ' + units[u];
   }
 
   function DownloadTest() {
@@ -106,12 +121,7 @@
   function UploadTest() {
     console.log('test upload');
 
-    stop = false;
-    setInterval(function () {
-      if (!stop && ui < 5) {
-        upload();
-      }
-    }, 100); // 0.1sn intervals
+    upload();
   }
 
   function TestStop() {

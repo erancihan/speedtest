@@ -14,6 +14,8 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:63342", "http://speed.erancihan.xyz"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderAccept, echo.HeaderAccessControlAllowOrigin },
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodHead},
 	}))
 
 	e.File("/", "res/test.html")
