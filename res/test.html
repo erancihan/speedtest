@@ -2,52 +2,71 @@
 <html lang="en">
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" rel="stylesheet">
     <meta charset="UTF-8">
     <title>Speedtest</title>
 </head>
 <body>
-<div>
-    <button id="dwn_btn">Download</button>
-    <button id="up_btn">Upload</button>
-    <button id="stop_btn">Stop</button>
-</div>
+<div class="container mt-2">
+    <div class="row">
+        <button id="dwn_btn">Download</button>
+        <button id="up_btn">Upload</button>
+        <button id="stop_btn">Stop</button>
+    </div>
+    <div class="row mt-2">
+        <div class="col">
 <pre>
-    <span>Download:</span> <span id="dbps">X</span> <span>B/s</span>
-    <span>Upload  :</span> <span id="ubps">X</span> <span>B/s</span>
+<span>Download:</span> <span id="dbps">X</span> <span>MBps</span>
+<span id="dr">x</span> <span>transferred</span>
+<span id="dt">x</span> <span>seconds</span>
 </pre>
+        </div>
+        <div class="col">
+<pre>
+<span>Upload:</span> <span id="ubps">X</span> <span>B/s</span>
+<span id="ur">x</span> <span>transferred</span>
+<span id="ut">x</span> <span>seconds</span>
+</pre>
+        </div>
+    </div>
+</div>
 <script>
   var url = 'http://speed.erancihan.xyz';
-  var stop = false;
-
-  var dc = 0;
-  var di = 0;
-  var dt = 0;
 
   var uc = 0;
   var ui = 0;
   var ut = 0;
 
-  var bytes = 20E+6; // 1MB
-
-  var span_dbps = document.getElementById('dbps');
+  var bytes = 20E+6; // 20MB
 
   function download() {
-    if (di > 5) { return; }
-    di = di + 1;
+    var dest = url + '/d?b=' + bytes;
+    var dsa = new Date().getTime();        // download start @timestamp ms
 
-    var start_time = new Date().getTime();
-    $.get(url + '/d?b=' + bytes, function (data, status, xhr) {
-        var request_time = new Date().getTime() - start_time;
+    var span_dbps = document.getElementById('dbps');
+    var span_dr   = document.getElementById('dr');   // download resources
+    var span_dt   = document.getElementById('dt');   // download time elapsed
 
-        dc = dc + 1;
-        dt = dt + request_time;
-        span_dbps.innerText = ((bytes * dc) / dt).toFixed(2);
-      }
-    );
+    var oReq = new XMLHttpRequest();
+    oReq.open('GET', dest);
+    oReq.addEventListener("progress", dup); // download update progress
+
+    function dup(oe) {                      // download update progress
+      var dt = new Date().getTime() - dsa;
+      var mbps = (oe.loaded * 1E-3) / dt;
+
+      span_dbps.innerText = mbps.toFixed(2);
+      span_dr.innerText   = humanFileSize(oe.loaded);
+      span_dt.innerText   = (dt * 1E-3).toFixed(2);
+    }
+
+    oReq.send();
   }
 
   function upload() {
-    if (ui > 5) { return; }
+    if (ui > 5) {
+      return;
+    }
     ui = ui + 1;
 
     var start_time = new Date().getTime();
@@ -62,13 +81,27 @@
     }, "blob");
   }
 
+  function humanFileSize(bytes, si=true) {
+    var thresh = si ? 1000 : 1024;
+    if(Math.abs(bytes) < thresh) {
+      return bytes + ' B';
+    }
+    var units = si
+      ? ['kB','MB','GB','TB','PB','EB','ZB','YB']
+      : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+    var u = -1;
+    do {
+      bytes /= thresh;
+      ++u;
+    } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+
+    return bytes.toFixed(1)+' '+units[u];
+  }
+
   function DownloadTest() {
     console.log('test download');
 
-    stop = false;
-    setInterval(function () {
-      if (!stop && di < 5) { download(); }
-    }, 100); // 0.1sn intervals
+    download();
   }
 
   function UploadTest() {
@@ -76,7 +109,9 @@
 
     stop = false;
     setInterval(function () {
-      if (!stop && ui < 5) { upload(); }
+      if (!stop && ui < 5) {
+        upload();
+      }
     }, 100); // 0.1sn intervals
   }
 
@@ -87,8 +122,8 @@
   window.onload = function () {
     console.log('onload');
 
-    document.getElementById('up_btn').onclick   = UploadTest;
-    document.getElementById('dwn_btn').onclick  = DownloadTest;
+    document.getElementById('up_btn').onclick = UploadTest;
+    document.getElementById('dwn_btn').onclick = DownloadTest;
     document.getElementById('stop_btn').onclick = TestStop;
   }
 </script>
