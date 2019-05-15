@@ -12,6 +12,9 @@ func main() {
 	e := echo.New()
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:63342", "http://speed.erancihan.xyz"},
+	}))
 
 	e.File("/", "res/test.html")
 	e.GET("/d", download)

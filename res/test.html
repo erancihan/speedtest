@@ -7,7 +7,8 @@
 </head>
 <body>
 <div>
-    <button id="start_btn">Test</button>
+    <button id="dwn_btn">Download</button>
+    <button id="up_btn">Upload</button>
     <button id="stop_btn">Stop</button>
 </div>
 <pre>
@@ -15,26 +16,38 @@
     <span>Upload  :</span> <span id="ubps">X</span> <span>B/s</span>
 </pre>
 <script>
+  var url = 'http://speed.erancihan.xyz';
+
   var ding = false;
   var uing = false;
+  var stop = false;
 
   var dc = 0;
+  var uc = 0;
+
   var dt = 0;
-  var dbsn = 10240; // download byte size next
+  var ut = 0;
+
+  var bytes = 2E+6; // 2MB
 
   var span_dbps = document.getElementById('dbps');
 
   function download() {
     var start_time = new Date().getTime();
 
-    $.get('/d?b=' + dbsn, function(data, status, xhr) {
+    $.ajax({
+      url: url + '/d?b=' + bytes,
+      type: 'GET',
+      crossDomain: true,
+      success: function (data, status, xhr) {
         var request_time = new Date().getTime() - start_time;
 
         dc = dc + 1;
         dt = dt + request_time;
-        span_dbps.innerText = ((10240 * dc) / dt).toFixed(2);
-      }
-    );
+        span_dbps.innerText = ((bytes * dc) / dt).toFixed(2);
+      },
+
+    });
   }
 
   function upload() {
@@ -43,42 +56,43 @@
     var bdata = new Uint8Array(512); // generate random data
     crypto.getRandomValues(bdata);
 
-    $.post('/u', bdata, function (data, status, xhr) {
+    $.post(url + '/u', bdata, function (data, status, xhr) {
       var request_time = new Date().getTime() - start_time;
 
-    }, "blob")
-
+      uc = uc + 1;
+      ut = ut + request_time;
+    }, "blob");
   }
 
-  function TestStart() {
-    console.log('on test clicked');
+  function DownloadTest() {
+    console.log('test download');
 
-    // ding = true;
-    uing = true;
-
+    stop = false;
     setInterval(function () {
-      if (ding) { download(); }
-      if (uing) { upload(); }
-      if (dc >= 50) {     // 5sn mark
-        ding = false;
-        uing = true;
-      }
-      if (dc >= 100) {    // 10sn mark
-        ding = false;
-        uing = false;
-      }
-    }, 100); // 0.1 sn intervals
+      if (!stop || dc >= 50) { download(); }
+      if (stop) { dc = 0; }
+    }, 100); // 0.1sn intervals
+  }
+
+  function UploadTest() {
+    console.log('test upload');
+
+    stop = false;
+    setInterval(function () {
+      if (!stop || uc >= 50) { upload(); }
+      if (stop) { uc = 0; }
+    }, 100); // 0.1sn intervals
   }
 
   function TestStop() {
-    ding = false;
-    uing = false;
+    stop = true;
   }
 
   window.onload = function () {
     console.log('onload');
 
-    document.getElementById('start_btn').onclick = TestStart;
+    document.getElementById('up_btn').onclick   = UploadTest;
+    document.getElementById('dwn_btn').onclick  = DownloadTest;
     document.getElementById('stop_btn').onclick = TestStop;
   }
 </script>
