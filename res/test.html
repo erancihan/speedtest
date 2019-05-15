@@ -17,43 +17,41 @@
 </pre>
 <script>
   var url = 'http://speed.erancihan.xyz';
-
-  var ding = false;
-  var uing = false;
   var stop = false;
 
   var dc = 0;
-  var uc = 0;
-
+  var di = 0;
   var dt = 0;
+
+  var uc = 0;
+  var ui = 0;
   var ut = 0;
 
-  var bytes = 2E+6; // 2MB
+  var bytes = 20E+6; // 1MB
 
   var span_dbps = document.getElementById('dbps');
 
   function download() {
-    var start_time = new Date().getTime();
+    if (di > 5) { return; }
+    di = di + 1;
 
-    $.ajax({
-      url: url + '/d?b=' + bytes,
-      type: 'GET',
-      crossDomain: true,
-      success: function (data, status, xhr) {
+    var start_time = new Date().getTime();
+    $.get(url + '/d?b=' + bytes, function (data, status, xhr) {
         var request_time = new Date().getTime() - start_time;
 
         dc = dc + 1;
         dt = dt + request_time;
         span_dbps.innerText = ((bytes * dc) / dt).toFixed(2);
-      },
-
-    });
+      }
+    );
   }
 
   function upload() {
-    var start_time = new Date().getTime();
+    if (ui > 5) { return; }
+    ui = ui + 1;
 
-    var bdata = new Uint8Array(512); // generate random data
+    var start_time = new Date().getTime();
+    var bdata = new Uint8Array(10240); // generate random data
     crypto.getRandomValues(bdata);
 
     $.post(url + '/u', bdata, function (data, status, xhr) {
@@ -69,8 +67,7 @@
 
     stop = false;
     setInterval(function () {
-      if (!stop || dc >= 50) { download(); }
-      if (stop) { dc = 0; }
+      if (!stop && di < 5) { download(); }
     }, 100); // 0.1sn intervals
   }
 
@@ -79,8 +76,7 @@
 
     stop = false;
     setInterval(function () {
-      if (!stop || uc >= 50) { upload(); }
-      if (stop) { uc = 0; }
+      if (!stop && ui < 5) { upload(); }
     }, 100); // 0.1sn intervals
   }
 
