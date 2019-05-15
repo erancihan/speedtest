@@ -38,7 +38,7 @@
    * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
    *
    * */
-  var url = 'http://speed.erancihan.xyz';
+  var url = 'http://localhost:8080';
 
   var uc = 0;
   var ui = 0;
@@ -46,9 +46,9 @@
 
   var bytes = 20E6; // 20MB
 
-  var bdata = new Uint8Array(1E6);  // 1MB
-  for (let i = 0; i < (1E3); i++) { // randomize bytes
-    crypto.getRandomValues(bdata.subarray(i * 1E3, (i + 1) * 1E3));
+  var bdata = new Uint8Array(10 * 1024 * 1024);  // 10MB
+  for (let i = 0; i < 10240; i++) {
+    crypto.getRandomValues(bdata.subarray(i * 1024, (i+1)*1024)); // randomize bytes
   }
 
   function download() {
@@ -60,8 +60,8 @@
     var span_dt   = document.getElementById('dt');   // download time elapsed
 
     var oReq = new XMLHttpRequest();
-    oReq.open('GET', dest);
     oReq.addEventListener('progress', dup); // download update progress
+    oReq.open('GET', dest);
 
     function dup(oe) {                      // download update progress
       var dt = new Date().getTime() - dsa;
@@ -76,25 +76,65 @@
   }
 
   function upload() {
-    var dest = url + '/u';
+    var dest = url + '/u/';
     var usa = new Date().getTime(); // upload start @timestamp ms
 
     var span_ubps = document.getElementById('ubps');
     var span_ur = document.getElementById('ur');   // upload resources
     var span_dt = document.getElementById('ut');   // upload time elapsed
 
-    var oReq = new XMLHttpRequest();
-    oReq.open('POST', dest);
-    oReq.setRequestHeader('Content-Type', 'application/octet-stream');
-    oReq.addEventListener('progress', uup); // upload update progress
+    var file = new Blob([bdata]);
+    var size = file.size;
+    var slice_s = 100 * 1024;
+    var start = 0;
 
-    function uup(oe) {
-      console.log('upload');
-      console.log(oe.loaded, oe.total, oe.lengthComputable);
+    send(file, 0, file.size);
+
+    /*
+    function loop() {
+      var end = start + slice_s;
+      if (size - end < 0) { end = size; }
+
+      var s = slice(file, start, end);
+      send(s, start, end);
+
+      if (end < size) {
+        start += slice_s;
+        setTimeout(loop, 1);
+      }
+    }
+    */
+
+    function send(piece, start, end) {
+      var formdata = new FormData();
+      var xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', uup); // upload update progress
+      xhr.open('POST', dest, true);
+
+      formdata.append('start', start);
+      formdata.append('end', end);
+      formdata.append('file', piece);
+
+      xhr.send(formdata);
     }
 
-    oReq.send(bdata);
+    function uup(oe) {
+      console.log(oe);
+    }
+
+    // setTimeout(loop, 1);
   }
+
+  /*
+  function slice(file, start, end) {
+    var slice = file.mozSlice ? file.mozSlice : file.webkitSlice ? file.webkitSlice : file.slice ? file.slice : noop;
+
+    return slice.bind(start, end);
+  }
+
+  function noop() { }
+  */
 
   function humanFileSize(bytes) {
     var thresh = 1024;

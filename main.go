@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func main() {
@@ -34,7 +33,7 @@ func download(ctx echo.Context) error {
 }
 
 func upload(ctx echo.Context) error {
-	ts := time.Now().UnixNano()
+	_, _ = ctx.FormFile("file")
 
-	return ctx.JSON(http.StatusOK, ts)
+	return ctx.NoContent(http.StatusOK)
 }
