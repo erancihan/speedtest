@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     <meta charset="UTF-8">
     <title>Speedtest</title>
 </head>
@@ -20,13 +20,14 @@
 
   var dc = 0;
   var dt = 0;
+  var dbsn = 10240; // download byte size next
 
   var span_dbps = document.getElementById('dbps');
 
   function download() {
     var start_time = new Date().getTime();
 
-    $.get('/d', function(data, status, xhr) {
+    $.get('/d?b=' + dbsn, function(data, status, xhr) {
         var request_time = new Date().getTime() - start_time;
 
         dc = dc + 1;
@@ -37,22 +38,32 @@
   }
 
   function upload() {
+    var start_time = new Date().getTime();
+
+    var bdata = new Uint8Array(512); // generate random data
+    crypto.getRandomValues(bdata);
+
+    $.post('/u', bdata, function (data, status, xhr) {
+      var request_time = new Date().getTime() - start_time;
+
+    }, "blob")
 
   }
 
   function TestStart() {
     console.log('on test clicked');
 
-    ding = true;
+    // ding = true;
+    uing = true;
 
     setInterval(function () {
       if (ding) { download(); }
       if (uing) { upload(); }
-      if (dc >= 5000) {     // 5sn mark
+      if (dc >= 50) {     // 5sn mark
         ding = false;
         uing = true;
       }
-      if (dc >= 10000) {    // 10sn mark
+      if (dc >= 100) {    // 10sn mark
         ding = false;
         uing = false;
       }
