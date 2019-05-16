@@ -68,9 +68,9 @@
    *
    * */
   var url = 'http://speed.erancihan.xyz';
-  var bytes = 20E6; // 20MB
-  var bdata = new Uint8Array(10E6);  // 10MB
-  for (let i = 0; i < 10E3; i++) {
+  var bytes = 10E6; // 10MB
+  var bdata = new Uint8Array(4E6);  // 10MB
+  for (let i = 0; i < 4E3; i++) {
     crypto.getRandomValues(bdata.subarray(i * 1E3, (i + 1) * 1E3)); // randomize bytes
   }
 
