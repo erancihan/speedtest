@@ -2,30 +2,36 @@
 <html lang="en">
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
-    <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <title>Speedtest</title>
 </head>
 <body>
 <div class="container mt-2">
-    <div class="row">
-        <button id="dwn_btn">Download</button>
-        <button id="up_btn">Upload</button>
+    <div class="row mt-1">
+        <div class="col">
+            <p class="mb-0">Server: <span id="server"></span></p>
+            <p class="mb-1">Ping: <span id="ping"></span></p>
+            <button id="start" class="btn btn-primary">Start</button>
+        </div>
     </div>
-    <div class="row mt-2">
+    <br />
+    <div class="row mt-1">
         <div class="col">
 <pre>
-<span>Download:</span> <span id="dbps">X</span> <span>MBps</span>
-<span id="dr">x</span> <span>transferred</span>
-<span id="dt">x</span> <span>seconds</span>
+<span>Download:</span> <span id="dbps">-</span> <span>MBps</span>
+<span id="dr">-</span> <span>transferred over</span> <span id="dt">-</span> <span>seconds</span>
 </pre>
+            <button id="dwn_btn">Download</button>
         </div>
         <div class="col">
 <pre>
-<span>Upload:</span> <span id="ubps">X</span> <span>B/s</span>
-<span id="ur">x</span> <span>transferred</span>
-<span id="ut">x</span> <span>seconds</span>
+<span>Upload:</span> <span id="ubps">-</span> <span>MBps</span>
+<span id="ur">-</span> <span>transferred over</span> <span id="ut">-</span> <span>seconds</span>
 </pre>
+            <button id="up_btn">Upload</button>
         </div>
     </div>
 </div>
@@ -48,6 +54,14 @@
   var bdata = new Uint8Array(10E6);  // 10MB
   for (let i = 0; i < 10E3; i++) {
     crypto.getRandomValues(bdata.subarray(i * 1E3, (i + 1) * 1E3)); // randomize bytes
+  }
+
+  function ping() {
+    var st = new Date().getTime() * 1E6;
+
+    $.get(url + '/ping', function (data) {
+      document.getElementById('ping').innerText = ((parseInt(data) - st) / 1E6).toFixed(1) + 'ms';
+    });
   }
 
   function download() {
@@ -136,6 +150,10 @@
 
   window.onload = function () {
     console.log('onload');
+
+    ping();
+
+    document.getElementById('server').innerText = url;
 
     document.getElementById('up_btn').onclick = UploadTest;
     document.getElementById('dwn_btn').onclick = DownloadTest;

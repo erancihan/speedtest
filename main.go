@@ -17,7 +17,7 @@ func main() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderAccept, echo.HeaderAccessControlAllowOrigin},
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodHead},
 	}))
-	e.Use(middleware.BodyLimit("20M"))
+	e.Use(middleware.BodyLimit("20MB"))
 
 	e.File("/", "res/test.html")
 	e.GET("/ping", ping)
