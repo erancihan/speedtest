@@ -11,7 +11,6 @@
     <div class="row">
         <button id="dwn_btn">Download</button>
         <button id="up_btn">Upload</button>
-        <button id="stop_btn">Stop</button>
     </div>
     <div class="row mt-2">
         <div class="col">
@@ -38,7 +37,7 @@
    * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
    *
    * */
-  var url = 'http://localhost:8080';
+  var url = 'http://speed.erancihan.xyz';
 
   var uc = 0;
   var ui = 0;
@@ -46,18 +45,18 @@
 
   var bytes = 20E6; // 20MB
 
-  var bdata = new Uint8Array(10 * 1024 * 1024);  // 10MB
-  for (let i = 0; i < 10240; i++) {
-    crypto.getRandomValues(bdata.subarray(i * 1024, (i+1)*1024)); // randomize bytes
+  var bdata = new Uint8Array(10E6);  // 10MB
+  for (let i = 0; i < 10E3; i++) {
+    crypto.getRandomValues(bdata.subarray(i * 1E3, (i + 1) * 1E3)); // randomize bytes
   }
 
   function download() {
-    var dest = url + '/d?b=' + bytes;
     var dsa = new Date().getTime();        // download start @timestamp ms
+    var dest = url + '/d?b=' + bytes + '&t=' + dsa;
 
     var span_dbps = document.getElementById('dbps');
-    var span_dr   = document.getElementById('dr');   // download resources
-    var span_dt   = document.getElementById('dt');   // download time elapsed
+    var span_dr = document.getElementById('dr');   // download resources
+    var span_dt = document.getElementById('dt');   // download time elapsed
 
     var oReq = new XMLHttpRequest();
     oReq.addEventListener('progress', dup); // download update progress
@@ -68,73 +67,44 @@
       var mbps = (oe.loaded * 1E-3) / dt;
 
       span_dbps.innerText = mbps.toFixed(2);
-      span_dr.innerText   = humanFileSize(oe.loaded);
-      span_dt.innerText   = (dt * 1E-3).toFixed(2);
+      span_dr.innerText = humanFileSize(oe.loaded);
+      span_dt.innerText = (dt * 1E-3).toFixed(2);
     }
 
     oReq.send();
   }
 
   function upload() {
-    var dest = url + '/u/';
     var usa = new Date().getTime(); // upload start @timestamp ms
+    var dest = url + '/u?t=' + usa;
 
     var span_ubps = document.getElementById('ubps');
     var span_ur = document.getElementById('ur');   // upload resources
-    var span_dt = document.getElementById('ut');   // upload time elapsed
+    var span_ut = document.getElementById('ut');   // upload time elapsed
 
     var file = new Blob([bdata]);
-    var size = file.size;
-    var slice_s = 100 * 1024;
-    var start = 0;
 
-    send(file, 0, file.size);
+    var formdata = new FormData();
+    var xhr = new XMLHttpRequest();
 
-    /*
-    function loop() {
-      var end = start + slice_s;
-      if (size - end < 0) { end = size; }
+    xhr.upload.addEventListener('progress', uup); // upload update progress
+    xhr.open('POST', dest, true);
 
-      var s = slice(file, start, end);
-      send(s, start, end);
+    formdata.append('start', 0);
+    formdata.append('end', file.size);
+    formdata.append('file', file);
 
-      if (end < size) {
-        start += slice_s;
-        setTimeout(loop, 1);
-      }
-    }
-    */
-
-    function send(piece, start, end) {
-      var formdata = new FormData();
-      var xhr = new XMLHttpRequest();
-
-      xhr.upload.addEventListener('progress', uup); // upload update progress
-      xhr.open('POST', dest, true);
-
-      formdata.append('start', start);
-      formdata.append('end', end);
-      formdata.append('file', piece);
-
-      xhr.send(formdata);
-    }
+    xhr.send(formdata);
 
     function uup(oe) {
-      console.log(oe);
+      var ut = new Date().getTime() - usa;
+      var mbps = (oe.loaded * 1E-3) / ut;
+
+      span_ubps.innerText = mbps.toFixed(2);
+      span_ur.innerText = humanFileSize(oe.loaded);
+      span_ut.innerText = (ut * 1E-3).toFixed(2);
     }
-
-    // setTimeout(loop, 1);
   }
-
-  /*
-  function slice(file, start, end) {
-    var slice = file.mozSlice ? file.mozSlice : file.webkitSlice ? file.webkitSlice : file.slice ? file.slice : noop;
-
-    return slice.bind(start, end);
-  }
-
-  function noop() { }
-  */
 
   function humanFileSize(bytes) {
     var thresh = 1024;
@@ -164,16 +134,11 @@
     upload();
   }
 
-  function TestStop() {
-    stop = true;
-  }
-
   window.onload = function () {
     console.log('onload');
 
     document.getElementById('up_btn').onclick = UploadTest;
     document.getElementById('dwn_btn').onclick = DownloadTest;
-    document.getElementById('stop_btn').onclick = TestStop;
   }
 </script>
 </body>
