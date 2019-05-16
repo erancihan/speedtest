@@ -30,7 +30,7 @@ func main() {
 func ping(ctx echo.Context) error {
 	ts := time.Now().UnixNano()
 
-	return ctx.String(http.StatusOK, string(ts))
+	return ctx.String(http.StatusOK, strconv.FormatInt(ts, 10))
 }
 
 func download(ctx echo.Context) error {
