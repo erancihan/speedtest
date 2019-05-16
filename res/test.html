@@ -67,7 +67,7 @@
    * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
    *
    * */
-  var url = '';
+  var url = 'http://speed.erancihan.xyz';
   var bytes = 10E6; // 10MB
   var bdata = new Uint8Array(4E6);  // 10MB
   for (let i = 0; i < 4E3; i++) {
@@ -77,10 +77,12 @@
   var flow = false;
 
   function ping() {
-    var st = new Date().getTime() * 1E6;
+    var st = new Date().getTime();
 
-    $.get(url + '/ping', function (data) {
-      document.getElementById('ping').innerText = ((parseInt(data) - st) / 1E6).toFixed(1) + 'ms';
+    $.get(url + '/ping', function () {
+      var dt = new Date().getTime();
+
+      document.getElementById('ping').innerText = (dt - st) + 'ms';
     });
   }
 
