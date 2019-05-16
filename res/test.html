@@ -12,26 +12,50 @@
 <div class="container mt-2">
     <div class="row mt-1">
         <div class="col">
-            <p class="mb-0">Server: <span id="server"></span></p>
-            <p class="mb-1">Ping: <span id="ping"></span></p>
-            <button id="start" class="btn btn-primary">Start</button>
+            <div class="card border-0">
+                <div class="row no-gutters text-center justify-content-center">
+                    <div class="col-4">
+                        <p class="card-text mb-0"><span id="server"></span></p>
+                        <p class="card-text mb-1">Ping: <span id="ping"></span></p>
+                    </div>
+                    <div class="col-2 my-auto">
+                        <button class="btn btn-danger btn-lg" id="start_btn">Start</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <br />
-    <div class="row mt-1">
-        <div class="col">
-<pre>
-<span>Download:</span> <span id="dbps">-</span> <span>MBps</span>
-<span id="dr">-</span> <span>transferred over</span> <span id="dt">-</span> <span>seconds</span>
-</pre>
-            <button id="dwn_btn">Download</button>
+    <div class="row mt-1 justify-content-center">
+        <div class="col-4">
+            <div class="card border-primary">
+                <div class="card-header">
+                    <h4 class="mb-0">Download</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title"><span id="dbps">-</span> <span>MBps</span></h1>
+                    <p class="card-text"><span id="dr">-</span> <span>transferred over</span> <span id="dt">-</span> <span>seconds</span></p>
+                    <br />
+                    <div class="w-100 text-center">
+                        <button class="btn btn-outline-primary" type="button" id="dwn_btn">Run</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col">
-<pre>
-<span>Upload:</span> <span id="ubps">-</span> <span>MBps</span>
-<span id="ur">-</span> <span>transferred over</span> <span id="ut">-</span> <span>seconds</span>
-</pre>
-            <button id="up_btn">Upload</button>
+        <div class="col-4">
+            <div class="card border-success">
+                <div class="card-header">
+                    <h4 class="mb-0">Upload</h4>
+                </div>
+                <div class="card-body">
+                    <h1><span id="ubps">-</span> <span>MBps</span></h1>
+                    <p><span id="ur">-</span> <span>transferred over</span> <span id="ut">-</span> <span>seconds</span></p>
+                    <br />
+                    <div class="w-100 text-center">
+                        <button class="btn btn-outline-success" type="button" id="up_btn">Run</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -44,17 +68,13 @@
    *
    * */
   var url = 'http://speed.erancihan.xyz';
-
-  var uc = 0;
-  var ui = 0;
-  var ut = 0;
-
   var bytes = 20E6; // 20MB
-
   var bdata = new Uint8Array(10E6);  // 10MB
   for (let i = 0; i < 10E3; i++) {
     crypto.getRandomValues(bdata.subarray(i * 1E3, (i + 1) * 1E3)); // randomize bytes
   }
+
+  var flow = false;
 
   function ping() {
     var st = new Date().getTime() * 1E6;
@@ -72,9 +92,12 @@
     var span_dr = document.getElementById('dr');   // download resources
     var span_dt = document.getElementById('dt');   // download time elapsed
 
-    var oReq = new XMLHttpRequest();
-    oReq.addEventListener('progress', dup); // download update progress
-    oReq.open('GET', dest);
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener('progress', dup); // download update progress
+    xhr.addEventListener('load', function () {
+      if (flow) { upload(); }
+    });
+    xhr.open('GET', dest);
 
     function dup(oe) {                      // download update progress
       var dt = new Date().getTime() - dsa;
@@ -85,7 +108,7 @@
       span_dt.innerText = (dt * 1E-3).toFixed(2);
     }
 
-    oReq.send();
+    xhr.send();
   }
 
   function upload() {
@@ -102,6 +125,7 @@
     var xhr = new XMLHttpRequest();
 
     xhr.upload.addEventListener('progress', uup); // upload update progress
+    xhr.upload.addEventListener('load', function () { flow = false; });
     xhr.open('POST', dest, true);
 
     formdata.append('start', 0);
@@ -136,16 +160,10 @@
     return bytes.toFixed(2) + ' ' + units[u];
   }
 
-  function DownloadTest() {
-    console.log('test download');
+  function start() {
+    flow = true;
 
     download();
-  }
-
-  function UploadTest() {
-    console.log('test upload');
-
-    upload();
   }
 
   window.onload = function () {
@@ -155,8 +173,9 @@
 
     document.getElementById('server').innerText = url;
 
-    document.getElementById('up_btn').onclick = UploadTest;
-    document.getElementById('dwn_btn').onclick = DownloadTest;
+    document.getElementById('up_btn').onclick = upload;
+    document.getElementById('dwn_btn').onclick = download;
+    document.getElementById('start_btn').onclick = start;
   }
 </script>
 </body>
