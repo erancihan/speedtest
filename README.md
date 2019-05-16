@@ -5,7 +5,7 @@
 ### Local development
 - running `go run main.go` should serve app on **localhost:8080**.
 
-### Deployment
+### Deployment
 - run `go build` to generate an executable of the project
 - `res` folder should be present in the same directory with executable
 
